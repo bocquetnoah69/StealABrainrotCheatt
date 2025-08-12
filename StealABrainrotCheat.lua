@@ -1,17 +1,18 @@
 ```lua
--- Script de triche pour Steal a Brainrot par [TonNom] (2025)
+-- Script de triche pour Steal a Brainrot par bocquetnoah69 (2025)
 -- Fonctionnalités : Hack de vitesse, AutoFarm, Téléportation, ESP, No-Clip, Anti-AFK
--- Compatible : Solara, PC, Mobile
+-- Compatible : Solara (PC), menu GUI avec Kavo UI
 
 -- Services Roblox
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local Workspace = game:GetService("Workspace")
 local UserInputService = game:GetService("UserInputService")
+local VirtualUser = game:GetService("VirtualUser")
 
 -- Bibliothèque GUI (Kavo UI, compatible Solara)
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
-local Window = Library.CreateLib("Triche Steal a Brainrot", "DarkTheme")
+local Window = Library.CreateLib("Triche Steal a Brainrot - Noah69", "DarkTheme")
 
 -- Variables
 local SpeedEnabled = false
@@ -22,20 +23,23 @@ local AntiAFKEnabled = false
 local SpeedValue = 50 -- Vitesse par défaut
 local ESPObjects = {}
 
--- Hack de Vitesse
+-- Fonction : Hack de Vitesse
 local function SetSpeed(speed)
     if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
         LocalPlayer.Character.Humanoid.WalkSpeed = speed
     end
 end
 
--- AutoFarm (collecte automatique des Brainrots)
+-- Fonction : AutoFarm (collecte automatique des Brainrots)
 local function AutoFarm()
     while AutoFarmEnabled do
-        for _, brainrot in pairs(Workspace.Brainrots:GetChildren()) do
-            if brainrot:IsA("Model") and brainrot:FindFirstChild("PrimaryPart") then
+        for _, brainrot in pairs(Workspace:GetChildren()) do -- Recherche large dans Workspace
+            if brainrot:IsA("Model") and string.find(brainrot.Name:lower(), "brainrot") and brainrot:FindFirstChild("PrimaryPart") then
                 LocalPlayer.Character.HumanoidRootPart.CFrame = brainrot.PrimaryPart.CFrame
-                fireclickdetector(brainrot:FindFirstChildOfClass("ClickDetector"))
+                local clickDetector = brainrot:FindFirstChildOfClass("ClickDetector")
+                if clickDetector then
+                    fireclickdetector(clickDetector)
+                end
                 wait(0.5)
             end
         end
@@ -43,14 +47,14 @@ local function AutoFarm()
     end
 end
 
--- Téléportation
+-- Fonction : Téléportation
 local function TeleportTo(target)
     if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
         LocalPlayer.Character.HumanoidRootPart.CFrame = target.CFrame
     end
 end
 
--- ESP (surlignage des Brainrots et joueurs)
+-- Fonction : ESP (surlignage)
 local function CreateESP(target, color, name)
     local BillboardGui = Instance.new("BillboardGui")
     BillboardGui.Adornee = target
@@ -72,8 +76,8 @@ end
 
 local function ToggleESP()
     if ESPEnabled then
-        for _, brainrot in pairs(Workspace.Brainrots:GetChildren()) do
-            if brainrot:IsA("Model") then
+        for _, brainrot in pairs(Workspace:GetChildren()) do
+            if brainrot:IsA("Model") and string.find(brainrot.Name:lower(), "brainrot") then
                 CreateESP(brainrot, Color3.new(1, 0, 0), "Brainrot")
             end
         end
@@ -90,7 +94,7 @@ local function ToggleESP()
     end
 end
 
--- No-Clip (passer à travers les murs)
+-- Fonction : No-Clip
 local function ToggleNoClip()
     if NoClipEnabled then
         local character = LocalPlayer.Character
@@ -128,10 +132,10 @@ local function ToggleNoClip()
     end
 end
 
--- Anti-AFK
+-- Fonction : Anti-AFK
 local function AntiAFK()
     while AntiAFKEnabled do
-        game:GetService("VirtualUser"):CaptureController()
+        VirtualUser:CaptureController()
         wait(60)
     end
 end
@@ -139,7 +143,7 @@ end
 -- Menu GUI
 local SpeedTab = Window:NewTab("Vitesse")
 local SpeedSection = SpeedTab:NewSection("Contrôles de Vitesse")
-SpeedSection:NewToggle("Activer Vitesse", "Augmente ta vitesse", function(state)
+SpeedSection:NewToggle("Activer Vitesse", "Augmente la vitesse de marche", function(state)
     SpeedEnabled = state
     if SpeedEnabled then
         SetSpeed(SpeedValue)
@@ -147,7 +151,7 @@ SpeedSection:NewToggle("Activer Vitesse", "Augmente ta vitesse", function(state)
         SetSpeed(16) -- Vitesse par défaut Roblox
     end
 end)
-SpeedSection:NewSlider("Valeur Vitesse", "Ajuste la vitesse", 100, 16, function(value)
+SpeedSection:NewSlider("Valeur Vitesse", "Ajuste la vitesse (16-100)", 100, 16, function(value)
     SpeedValue = value
     if SpeedEnabled then
         SetSpeed(SpeedValue)
@@ -173,8 +177,8 @@ TeleportSection:NewDropdown("TP vers Joueur", "Choisis un joueur", Players:GetPl
 end)
 TeleportSection:NewButton("TP au Brainrot Proche", "Téléporte au Brainrot le plus proche", function()
     local closest, minDist = nil, math.huge
-    for _, brainrot in pairs(Workspace.Brainrots:GetChildren()) do
-        if brainrot:IsA("Model") and brainrot:FindFirstChild("PrimaryPart") then
+    for _, brainrot in pairs(Workspace:GetChildren()) do
+        if brainrot:IsA("Model") and string.find(brainrot.Name:lower(), "brainrot") and brainrot:FindFirstChild("PrimaryPart") then
             local dist = (LocalPlayer.Character.HumanoidRootPart.Position - brainrot.PrimaryPart.Position).Magnitude
             if dist < minDist then
                 closest = brainrot.PrimaryPart
@@ -189,7 +193,7 @@ end)
 
 local ESPTab = Window:NewTab("ESP")
 local ESPSection = ESPTab:NewSection("Contrôles ESP")
-ESPSection:NewToggle("Activer ESP", "Surligne Brainrots et joueurs", function(state)
+ESPSection:NewToggle("Activer ESP", "Surligne Brainrots (rouge) et joueurs (vert)", function(state)
     ESPEnabled = state
     ToggleESP()
 end)
@@ -203,7 +207,7 @@ end)
 
 local MiscTab = Window:NewTab("Divers")
 local MiscSection = MiscTab:NewSection("Options Diverses")
-MiscSection:NewToggle("Anti-AFK", "Évite les expulsions AFK", function(state)
+MiscSection:NewToggle("Anti-AFK", "Évite les kicks pour inactivité", function(state)
     AntiAFKEnabled = state
     if AntiAFKEnabled then
         spawn(AntiAFK)
@@ -211,8 +215,8 @@ MiscSection:NewToggle("Anti-AFK", "Évite les expulsions AFK", function(state)
 end)
 
 -- Mise à jour dynamique pour ESP
-Workspace.Brainrots.ChildAdded:Connect(function(child)
-    if ESPEnabled and child:IsA("Model") then
+Workspace.ChildAdded:Connect(function(child)
+    if ESPEnabled and child:IsA("Model") and string.find(child.Name:lower(), "brainrot") then
         CreateESP(child, Color3.new(1, 0, 0), "Brainrot")
     end
 end)
@@ -221,4 +225,7 @@ Players.PlayerAdded:Connect(function(player)
         CreateESP(player.Character, Color3.new(0, 1, 0), player.Name)
     end
 end)
+
+-- Message de confirmation
+print("Script de triche pour Steal a Brainrot chargé ! Menu GUI activé.")
 ```
